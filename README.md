@@ -1,4 +1,4 @@
-install:
+Install:
 
 `go install github.com/vadimalekseev/mcfg@v0.0.1`
 
