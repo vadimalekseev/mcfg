@@ -1,0 +1,33 @@
+app:
+  config:
+    jobs:
+      - name: marketplace_shark
+        interval: 5m
+        engines:
+          - alias: my_service
+            type: "postgres"
+            host: "my-service"
+            port: 6432
+            db: "my-service"
+            user: "password"
+            vault_key: "pg_my_service_password"
+            connection_timeout: 30
+            ssl_disabled: true
+      - name: tratata_shipping_fee
+        interval: 1m
+        engines:
+          - alias: "my_service_2"
+            type: "postgres"
+            host: "rtl-my-service"
+            port: 6432
+            db: "rtl-my-service"
+            user: "rtl-shipping-fee-user"
+            vault_key: "db_password"
+            connection_timeout: 1800
+            ssl_disabled: true
+        queries:
+          - name: custom_dmss
+            help: Number of stored custom _ DM
+            values:
+              - dmss_count
+            query: "select count(*) from my_table"

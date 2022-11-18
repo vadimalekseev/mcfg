@@ -1,0 +1,16 @@
+app:
+  config:
+    jobs:
+      - name: marketplace_shark
+        interval: 5m
+        engines:
+          - alias: my_service
+            type: "postgres"
+            host: "my-service"
+            port: 6432
+            db: "my-service"
+            user: "password"
+            vault_key: "pg_my_service_password"
+            connection_timeout: 30
+            ssl_disabled: true
+            

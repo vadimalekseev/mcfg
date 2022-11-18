@@ -1,0 +1,100 @@
+# alerts prod
+monitoring:
+  slackChannel: "alerts"
+  opsgenie:
+    responsibleTeam: platform_team
+  alertsEnabled: true
+  customAlerts:
+    service:
+      - alert: dms_count_unsync_between_tratata_and_ogogo
+        expr: abs(sum(sql_tratata_dms_count_db_main) + sum(sql_tratata_dms_count_db_shard1) + sum(sql_tratata_dms_count_db_shard2) - sum(sql_ns_adm_active_dmss_for_mp_shark{status="ACTIVE"})) > 10
+        for: 30m
+        interval: 5m
+        labels:
+          severity: warning
+          mention: "@duty"
+        annotations:
+          summary: "Service `my_service` has unsynchronized with delivery-method-service DM"
+          description: "Service `my_service` has more than 10 unsynchronized with delivery-method-service DM in 30 minutes. Currently - `{{$value}}`"
+      - alert: thor_postings
+        expr: avg_over_time(sql_multi_routing_integration_type{integration_type="thor"} [1h]) <= 0
+        for: 30m
+        labels:
+          severity: critical
+          mention: "@duty"
+        annotations:
+          summary: "Missing postings with integration type - thor"
+          description: "some description"
+      - alert: non_integrated_postings
+        expr: avg_over_time(sql_multi_routing_integration_type{integration_type="non_integrated"} [30m]) <= 0
+        for: 30m
+        labels:
+          severity: critical
+          mention: "@duty"
+        annotations:
+          summary: "Missing postings with integration type - non_integrated"
+          description: "some description"
+      - alert: tpl_tracking_postings
+        expr: avg_over_time(sql_multi_routing_integration_type{integration_type="tpl_tracking"} [30m]) <= 0
+        for: 30m
+        labels:
+          severity: critical
+          mention: "@duty"
+        annotations:
+          summary: "Missing postings with integration type - tpl_tracking"
+          description: "some description"
+      - alert: courier_postings
+        expr: avg_over_time(sql_multi_routing_delivery_type{delivery_type="Courier"} [30m]) <= 0
+        for: 30m
+        labels:
+          severity: critical
+          mention: "@duty"
+        annotations:
+          summary: "Missing postings with DM - Courier"
+          description: "some description"
+      - alert: pvz_postings
+        expr: avg_over_time(sql_multi_routing_delivery_type{delivery_type="PVZ"} [30m]) <= 0
+        for: 30m
+        labels:
+          severity: critical
+          mention: "@duty"
+        annotations:
+          summary: "Missing postings with DM - PVZ"
+          description: "some description"
+      - alert: post_postings
+        expr: avg_over_time(sql_multi_routing_delivery_type{delivery_type="Post"} [30m]) <= 0
+        for: 30m
+        labels:
+          severity: critical
+          mention: "@duty"
+        annotations:
+          summary: "Missing postings with DM - Post"
+          description: "some description"
+      - alert: bOrder_postings
+        expr: avg_over_time(sql_multi_routing_department{department="bOrder"} [30m]) <= 0
+        for: 30m
+        labels:
+          severity: critical
+          mention: "@duty"
+        annotations:
+          summary: "Missing postings with department - bOrder"
+          description: "some description"
+      - alert: __postings
+        expr: avg_over_time(sql_multi_routing_department{department="_"} [30m]) <= 0
+        for: 30m
+        labels:
+          severity: critical
+          mention: "@duty"
+        annotations:
+          summary: "Missing postings with department - _"
+          description: "some description"
+      - alert: __express_postings
+        expr: avg_over_time(sql_multi_routing_department{department="Xpress"} [1h]) <= 0
+        for: 30m
+        labels:
+          severity: critical
+          mention: "@duty"
+        annotations:
+          summary: "Missing postings with department - Xpress"
+          description: "some description"
+          

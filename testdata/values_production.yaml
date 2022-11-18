@@ -1,0 +1,439 @@
+app:
+  config:
+    jobs:
+      - name: marketplace_shark
+        interval: 5m
+        engines:
+          - alias: my_service
+            type: "postgres"
+            host: "my-service"
+            port: 6432
+            db: "my-service"
+            user: "password"
+            vault_key: "pg_my_service_password"
+            connection_timeout: 30
+            ssl_disabled: true
+        queries:
+          - name: marketplace_shark_bOrder_moscow
+            help: Count of Moscow warehouses with 'bOrder' department
+            values:
+              - warehouse_count
+            query: |
+              select count(1) as warehouse_count
+              from warehouse w
+                       join location_warehouse lw on w.web_warehouse_id = lw.web_warehouse_id
+                       join location l on lw.location_id = l.id
+              where w.department = 'bOrder'
+                and l.location_uid = 'fffffff-ffff-ffff-ffff-ffffff'
+          - name: tratata_bOrder_warehouse_count
+            help: Count of warehouses with 'bOrder' department
+            values:
+              - value
+            query: |
+              select count(*) as value from warehouse where department = 'bOrder'
+          - name: tratata_dms_location_count_db_main
+            help: delivery method location count
+            values:
+              - value
+            query: |
+              select count(*) as value from dms_location
+          - name: tratata_dms_count_db_main
+            help: delivery method count
+            values:
+              - value
+            query: |
+              select count(*) as value from dms
+          - name: tratata_excludes_info
+            help: Info about wh statuses
+            values:
+              - cnt_created
+              - cnt_disabled_due_to_limit
+              - cnt_wh_excluded
+              - cnt_excludes
+              - cnt_wh_disabled_no_exclude
+              - cnt_day_off
+              - cnt_blocked
+              - cnt_all
+            query: |
+              select
+                 (select count(1)
+                    from warehouse
+                   where status = 'created') as cnt_created,
+                 (select count(1)
+                    from warehouse
+                   where status = 'disabled_due_to_limit') as cnt_disabled_due_to_limit,
+                 (select count(1)
+                    from warehouse
+                   where status = 'day_off') as cnt_day_off,
+                 (select count(1)
+                    from warehouse
+                   where status = 'blocked') as cnt_blocked,
+                 (select count(1)
+                    from warehouse) as cnt_all,
+                 (select count(distinct a.warehouse_id)
+                    from warehouse_exclude a
+                   where time_to > localtimestamp) as cnt_wh_excluded,
+                 (select count(1)
+                    from warehouse_exclude
+                   where time_to > localtimestamp) as cnt_excludes,
+                 (select count(1)
+                    from warehouse w
+                   where status = 'disabled_due_to_limit'
+                     and not exists (select
+                                       from warehouse_exclude
+                                      where warehouse_id = w.id)) as cnt_wh_disabled_no_exclude
+          - name: tratata_priority_company_count_db_main
+            help: Count of sellers with more than one warehouse priorities
+            values:
+              - value
+            query: |
+              select count(distinct seller_id) as value from warehouse_priority 
+          - name: tratata_priority_warehouse_count_db_main
+            help: Count of warehouses with priority
+            values:
+              - value
+            query: |
+              select count(*) as value from warehouse_priority
+          - name: tratata_warehouses_without_locations
+            help: Count of warehouses without locations
+            values:
+              - value
+            query: |
+              select count(*) as value from warehouse w left join location_warehouse wl on  w.web_warehouse_id=wl.web_warehouse_id  where wl.web_warehouse_id is null
+          - name: ns_availability_wh_info
+            help: Metrics on warehouse availability
+            values:
+              - cnt_available
+              - cnt_not_available
+              - cnt_total
+            query: |
+              select count(*) filter (where available)       cnt_available,
+              count(*) filter (where not available)   cnt_not_available,
+              (select count(*)
+              from warehouse a
+              where a.department = 'Xpress'
+              and a.status in ('day_off', 'created')
+              ) cnt_total
+              from warehouse_availability a
+
+      - name: marketplace_shark_shard1
+        interval: 5m
+        engines:
+          - alias: "my_service-db-shard1"
+            type: "postgres"
+            host: "my_service-shard01"
+            port: 6432
+            db: "my_service-shard01"
+            user: "password"
+            vault_key: "pg_my_service_password"
+            connection_timeout: 10
+        queries:
+          - name: tratata_dms_location_count_db_shard1
+            help: delivery method location count
+            values:
+              - value
+            query: |
+              select count(*) as value from dms_location
+          - name: tratata_dms_count_db_shard1
+            help: delivery method count
+            values:
+              - value
+            query: |
+              select count(*) as value from dms
+          - name: tratata_priority_company_count_db_shard_01
+            help: Count of sellers with more than one warehouse priorities
+            values:
+              - value
+            query: |
+              select count(distinct seller_id) as value from warehouse_priority 
+          - name: tratata_priority_warehouse_count_db_shard_01
+            help: Count of warehouses with priority
+            values:
+              - value
+            query: |
+              select count(*) as value from warehouse_priority
+
+      - name: marketplace_tafifficator_shard2
+        interval: 5m
+        engines:
+          - alias: "my_service-db-shard2"
+            type: "postgres"
+            host: "my_service-shard02"
+            port: 6432
+            db: "my_service-shard02"
+            user: "password"
+            vault_key: "pg_my_service_password"
+            connection_timeout: 10
+        queries:
+          - name: tratata_dms_location_count_db_shard2
+            help: delivery method location count
+            values:
+              - value
+            query: |
+              select count(*) as value from dms_location
+          - name: tratata_dms_count_db_shard2
+            help: delivery method count
+            values:
+              - value
+            query: |
+              select count(*) as value from dms
+          - name: tratata_priority_company_count_db_shard_02
+            help: Count of sellers with more than one warehouse priorities
+            values:
+              - value
+            query: |
+              select count(distinct seller_id) as value from warehouse_priority 
+          - name: tratata_priority_warehouse_count_db_shard_02
+            help: Count of warehouses with priority
+            values:
+              - value
+            query: |
+              select count(*) as value from warehouse_priority
+
+
+      - name: tratata_1h
+        interval: 1h
+        engines:
+          - alias: "my_service-db-main"
+            type: "postgres"
+            host: "my-service"
+            port: 6432
+            db: "my-service"
+            user: "password"
+            vault_key: "pg_my_service_password"
+            connection_timeout: 30
+        queries:
+          - name: tratata_warehouse_without_five_work_days_count
+            help: count of warehouses without five work days
+            labels:
+              - department
+            values:
+              - value
+            query: |
+              select department, count(CASE WHEN department = '_' AND cnt < 5 THEN 1 WHEN department = 'bOrder' AND cnt < 1 THEN 1 WHEN department = 'Xpress' AND cnt < 7 THEN 1 END) as value
+              from (
+                select count(*) as cnt, w.department from warehouse w
+                left join warehouse_timetable wt on w.id = wt.warehouse_id
+                where (wt.warehouse_id is null or (time_from > current_date + interval '7' day and time_from <=  current_date + interval '14' day))
+                group by w.id having count(*) < 7) as tt
+              group by department
+
+          - name: tratata_express_dms_count
+            help: count of express DM
+            values:
+              - value
+            query: |
+              select count(*) as value from dms dm WHERE dm.walk_press = true
+
+          - name: tratata_express_warehouse_count
+            help: count of express warehouses
+            values:
+              - value
+            query: |
+              select count(*) as value from warehouse WHERE department = 'Xpress'
+
+          - name: tratata_warehouse_count
+            help: count of warehouses
+            values:
+              - value
+            query: |
+              select count(*) as value from warehouse
+
+          - name: tratata_location_count
+            help: count of locations
+            values:
+              - value
+            query: |
+              select count(*) as value from location
+
+          - name: tratata_express_dms_without_next_week_dmt_count
+            help: count of express DM without next week dmt
+            values:
+              - value
+            query: |
+              select count(*) as value
+              from dms dm
+              left join dms_timetable dmt on dm.id = dmt.dms_id and dmt.time_from-current_date between interval '7d' and interval '14d'
+              where dm.walk_press = true AND dmt.id is null
+              and dm.type != 'thor'
+
+      - name: tratata_1h_shard1
+        interval: 1h
+        engines:
+          - alias: "my_service-db-shard1"
+            type: "postgres"
+            host: "my_service-shard01"
+            port: 6432
+            db: "my_service-shard01"
+            user: "password"
+            vault_key: "pg_my_service_password"
+            connection_timeout: 30
+        queries:
+          - name: tratata_express_dms_count_shard1
+            help: count of express DM
+            values:
+              - value
+            query: |
+              select count(*) as value from dms dm WHERE dm.walk_press = true
+
+          - name: tratata_express_dms_without_next_week_dmt_count_shard1
+            help: count of express DM without next week dmt
+            values:
+              - value
+            query: |
+              select count(*) as value
+              from dms dm
+              left join dms_timetable dmt on dm.id = dmt.dms_id and dmt.time_from-current_date between interval '7d' and interval '14d'
+              where dm.walk_press = true AND dmt.id is null
+              and dm.type != 'thor'
+
+      - name: tratata_1h_shard2
+        interval: 1h
+        engines:
+          - alias: "my_service-db-shard2"
+            type: "postgres"
+            host: "my_service-shard02"
+            port: 6432
+            db: "my_service-shard02"
+            user: "password"
+            vault_key: "pg_my_service_password"
+            connection_timeout: 30
+        queries:
+          - name: tratata_express_dms_count_shard2
+            help: count of express DM
+            values:
+              - value
+            query: |
+              select count(*) as value from dms dm WHERE dm.walk_press = true
+
+          - name: tratata_express_dms_without_next_week_dmt_count_shard2
+            help: count of express DM without next week dmt
+            values:
+              - value
+            query: |
+              select count(*) as value
+              from dms dm
+              left join dms_timetable dmt on dm.id = dmt.dms_id and dmt.time_from-current_date between interval '7d' and interval '14d'
+              where dm.walk_press = true AND dmt.id is null
+              and dm.type != 'thor'
+
+      - name: tratata_platform_lock
+        interval: 1m
+        engines:
+          - alias: "my_service-db-main"
+            type: "postgres"
+            host: "my-service"
+            port: 6432
+            db: "my-service"
+            user: "password"
+            vault_key: "pg_my_service_password"
+            connection_timeout: 10
+        queries:
+          - name: tratata_platform_lock
+            help: current locks holders
+            labels:
+              - lock
+              - actor
+            values:
+              - value
+            query: |
+              select lock_id as lock, actor, EXTRACT(EPOCH FROM (expires - now())) as value FROM platform_lock
+
+      - name: ns_seller_beaver_passport
+        interval: 5m
+        engines:
+          - alias: "seller-beaver_passport"
+            type: "postgres"
+            host: "seller-beaver_passport"
+            port: 6432
+            db: "seller-beaver_passport"
+            user: "seller-beaver_passport-user"
+            vault_key: "seller_beaver_passport_db_password"
+            connection_timeout: 10
+        queries:
+          - name: ns_st_metrics
+            help: General metrics on seller-beaver_passport
+            values:
+              - cnt_meta_ok
+              - cnt_meta_errors
+              - cnt_business_errors
+            query: |
+              select (
+              select count(*) as cnt_meta_ok
+              from logs l
+              where entity = 'Error'
+              and l.data_delta ->> 'event' = 'seller_beaver_passport'
+              and l.data_delta ->> 'status' = 'Ok'),
+              (select count(*) as cnt_meta_errors
+              from logs l
+              where entity = 'Error'
+              and l.data_delta ->> 'event' = 'seller_beaver_passport'
+              and l.data_delta ->> 'status' != 'Ok'),
+              (select count(*) as cnt_business_errors
+              from logs l
+              where entity = 'Error'
+              and coalesce(l.data_delta ->> 'event', '') != 'seller_beaver_passport')
+
+          - name: ns_st_meta_metrics
+            help: meta services metrics on seller-beaver_passport
+            labels:
+              - nm_srv
+            values:
+              - value
+            query: |
+              select coalesce(nullif(a.data_delta -> 'beaver_passportData' ->> 'metaSysname', ''), coalesce(nullif(a.data_delta -> 'beaver_passportData' ->> 'meta_sysname', '')) ,'NULL') as nm_srv, count(*) as value
+              from logs  a
+              where a.entity = 'beaver_passportData'
+              group by coalesce(nullif(a.data_delta -> 'beaver_passportData' ->> 'metaSysname', ''), coalesce(nullif(a.data_delta -> 'beaver_passportData' ->> 'meta_sysname', '')) ,'NULL')
+
+          - name: ns_st_flows_metrics
+            help: beaver_passport flow type metrics on seller-beaver_passport
+            labels:
+              - beaver_passport_type_str
+            values:
+              - cnt
+            query: |
+              select department || '_' ||beaver_passport_type as beaver_passport_type_str, count(*) as cnt
+              from (
+              select coalesce(nullif(a.data_delta -> 'beaver_passportData' ->> 'Department', ''), '_') department,
+              coalesce(a.data_delta -> 'beaver_passportData' ->> 'beaver_passportType', '')                        beaver_passport_type
+              from logs a
+              where a.entity = 'beaver_passportData') data
+              group by department || '_' ||beaver_passport_type
+              
+              
+
+      - name: multi_routing
+        interval: 5m
+        engines:
+          - alias: "multi_routing"
+            type: "postgres"
+            host: "multi-routing-2"
+            port: 6432
+            db: "multi-routing-2"
+            user: "multi-routing-2-user"
+            vault_key: "multi-routing-password"
+            connection_timeout: 30
+            ssl_disabled: true
+        queries:
+          - name: multi_routing_integration_type
+            help: Number of stored postings splitted by integration type
+            labels:
+              - integration_type
+            values:
+              - value
+            query: "select count(*) from my_table"
+          - name: multi_routing_delivery_type
+            help: Number of stored postings splitted by DM
+            labels:
+              - delivery_type
+            values:
+              - value
+            query: "select count(*) from my_table"
+          - name: multi_routing_department
+            help: Number of stored postings splitted by department
+            labels:
+              - department
+            values:
+              - value
+            query: "select count(*) from my_table"

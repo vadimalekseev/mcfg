@@ -1,0 +1,12 @@
+a:
+  - name: a
+  - name: b
+  - name: c
+  - name: d
+  - name: e
+  - name: f
+f:
+  - name: e
+
+b: 
+  name: c
