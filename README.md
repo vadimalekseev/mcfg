@@ -4,5 +4,5 @@ Install:
 
 usage:
 
-`mcfg merge -p ".yaml$" -f staging > .o3/k8s/values_staging.yaml`
-`mcfg merge -p ".yaml$" -f production > .o3/k8s/values_production.yaml`
+`mcfg merge -p ".yaml$" -f staging > values_staging.yaml`
+`mcfg merge -p ".yaml$" -f production > values_production.yaml`
