@@ -4,5 +4,4 @@ Install:
 
 usage:
 
-`mcfg merge -p ".yaml$" -f staging > values_staging.yaml`
-`mcfg merge -p ".yaml$" -f production > values_production.yaml`
+`mcfg merge -p ".yaml$" -f folder > values_staging.yaml`
