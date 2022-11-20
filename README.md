@@ -4,4 +4,4 @@ Install:
 
 usage:
 
-`mcfg merge -p ".yaml$" -f folder > values_staging.yaml`
+`mcfg merge -p ".yaml$" -f testdata > merged.yaml`
